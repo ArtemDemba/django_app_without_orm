@@ -123,3 +123,30 @@ def add_book(request):
         return HttpResponseRedirect('.')    # это чтобы после обновления страницы или отправки формы, данные
                                             # полей формы очищались
     return render(request, 'book_store/add_book.html', context)
+
+
+def all_books_employee(request):
+    with connection.cursor() as cursor:
+        cursor.execute('''SELECT * FROM books''')
+        all_rows = cursor.fetchall()
+        for i in range(len(all_rows)):
+            all_rows[i] = list(all_rows[i])
+        for i in range(len(all_rows)):
+            all_rows[i][3] = float(all_rows[i][3])
+        print('ALL ROWS: ', all_rows)
+        cursor.execute('SELECT book_id FROM books')
+        book_ids = [i[0] for i in cursor.fetchall()]
+        print('BOOK_IDS', book_ids)
+
+    context = {
+        'all_books': zip(all_rows, book_ids),
+    }
+    return render(request, 'book_store/all_books_employee.html', context)
+
+
+def delete_book(request, book_id):
+    with connection.cursor() as cursor:
+        SQL_query = f'''DELETE FROM books
+                        WHERE book_id={book_id}'''
+        cursor.execute(SQL_query)
+    return HttpResponseRedirect('/all_books_employee/')

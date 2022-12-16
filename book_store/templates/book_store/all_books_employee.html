@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<ul>
+    {% for book, book_id in all_books %}
+        <li> {{ book }} <button><a href="/delete_book/{{ book_id }}/">Delete</a></button></li>
+    {% endfor %}
+</ul>
+<button><a href="/employee_main_page/">Main page</a></button>
+</body>
+</html>
