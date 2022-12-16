@@ -43,12 +43,22 @@ with connection.cursor() as cursor:
 
 
 class AddBookForm(forms.Form):
-    choices = (
-        [(i, i) for i in all_tables]
-    )
-    first_name = forms.CharField(max_length=100)
-    nick_name = forms.CharField(max_length=100, required=False)
-    table = forms.ChoiceField(choices=choices, )
+    with connection.cursor() as cursor:
+        cursor.execute('SELECT org_name FROM publishers')
+        choices_publisher = []
+        for i in cursor.fetchall():
+            choices_publisher.append([i[0], i[0]])
+
+        cursor.execute('SELECT org_name FROM suppliers')
+        choices_supplier = []
+        for i in cursor.fetchall():
+            choices_supplier.append([i[0], i[0]])
+
+    title = forms.CharField(max_length=100)
+    price = forms.FloatField()
+    production_date = forms.CharField(max_length=10)    # yyyy-mm-dd
+    publisher = forms.ChoiceField(choices=choices_publisher)
+    supplier = forms.ChoiceField(choices=choices_supplier)
 
 
 class SortBooksForm(forms.Form):

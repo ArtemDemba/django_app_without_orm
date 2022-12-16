@@ -61,8 +61,65 @@ def login(request):
 
 
 def customer_main_page(request):
-    return HttpResponse('Customer main page')
+    with connection.cursor() as cursor:
+        cursor.execute('''SELECT title, price, production_date, org_name FROM books
+                            JOIN publishers USING(publisher_id)''')
+        all_rows = cursor.fetchall()
+        for i in range(len(all_rows)):
+            all_rows[i] = list(all_rows[i])
+        for i in range(len(all_rows)):
+            all_rows[i][1] = float(all_rows[i][1])
+        print('ALL ROWS: ', all_rows)
+
+    context = {
+        'all_books': all_rows
+    }
+    return render(request, 'book_store/customer_main_page.html', context)
 
 
 def employee_main_page(request):
-    return HttpResponse('Employee main page')
+        return render(request, 'book_store/employee_main_page.html')
+
+
+def add_book(request):
+    form = forms.AddBookForm(request.POST or None)
+    all_columns = []
+    context = {
+        'form': form
+    }
+    with connection.cursor() as cursor:
+        cursor.execute('''SELECT column_name
+                                  FROM information_schema.columns
+                                  WHERE table_name = 'books';''')
+        for i in cursor.fetchall():
+            all_columns.append(i[0])
+    print('CHOICES PUBLISHERS: ', forms.AddBookForm.choices_publisher)
+
+    if form.is_valid():
+        data = (
+            form.cleaned_data['title'],
+            form.cleaned_data['price'],
+            form.cleaned_data['production_date'],
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(f'''SELECT publisher_id FROM publishers
+                                WHERE org_name=\'{form.cleaned_data['publisher']}\'''')
+            publisher_id = cursor.fetchone()
+            print(f'PUBLISHER_ID: {publisher_id}')
+
+            cursor.execute(f'''SELECT supplier_id FROM suppliers
+                                            WHERE org_name=\'{form.cleaned_data['supplier']}\'''')
+            supplier_id = cursor.fetchone()
+            print(f'SUPPLIER_ID: {supplier_id}')
+
+            data += publisher_id[0], supplier_id[0]
+            print('DATA: ', data)
+
+        with connection.cursor() as cursor:
+            SQL_query = f'INSERT INTO books(title, price, production_date, publisher_id, supplier_id) VALUES ' + f'\n{data}'
+            print(SQL_query)
+            cursor.execute(SQL_query)
+
+        return HttpResponseRedirect('.')    # это чтобы после обновления страницы или отправки формы, данные
+                                            # полей формы очищались
+    return render(request, 'book_store/add_book.html', context)
