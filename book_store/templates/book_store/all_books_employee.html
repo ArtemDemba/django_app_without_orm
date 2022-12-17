@@ -7,7 +7,11 @@
 <body>
 <ul>
     {% for book, book_id in all_books %}
-        <li> {{ book }} <button><a href="/delete_book/{{ book_id }}/">Delete</a></button></li>
+        <li>
+            {{ book }}
+            <button><a href="/delete_book/{{ book_id }}/">Delete</a></button>
+            <button><a href="/update_book/{{ book_id }}/">Edit</a></button>
+        </li>
     {% endfor %}
 </ul>
 <button><a href="/employee_main_page/">Main page</a></button>

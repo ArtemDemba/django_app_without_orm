@@ -150,3 +150,67 @@ def delete_book(request, book_id):
                         WHERE book_id={book_id}'''
         cursor.execute(SQL_query)
     return HttpResponseRedirect('/all_books_employee/')
+
+
+def update_book(request, book_id):
+    with connection.cursor() as cursor:
+        cursor.execute(f'''SELECT title, price, production_date, publisher_id, supplier_id from books
+                            WHERE book_id={book_id}''')
+        book = cursor.fetchone()
+        print('BOOK: ', book)
+
+        cursor.execute(f'''select org_name from books
+                            join publishers using(publisher_id)
+                            WHERE book_id={book_id}''')
+        publisher = cursor.fetchone()
+        print('PUBLISHER: ', publisher)
+
+        cursor.execute(f'''select org_name from books
+                                    join suppliers using(supplier_id)
+                                    WHERE book_id={book_id}''')
+        supplier = cursor.fetchone()
+        print('SUPPLIER: ', supplier)
+
+    form = forms.AddBookForm(request.POST or None, initial={
+        'title': book[0],
+        'price': book[1],
+        'production_date': book[2],
+        'publisher': publisher,
+        'supplier': supplier
+    })
+
+    if form.is_valid():
+        data = (
+            form.cleaned_data['title'],
+            form.cleaned_data['price'],
+            form.cleaned_data['production_date'],
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(f'''SELECT publisher_id FROM publishers
+                                WHERE org_name=\'{form.cleaned_data['publisher']}\'''')
+            publisher_id = cursor.fetchone()
+            print(f'PUBLISHER_ID: {publisher_id}')
+
+            cursor.execute(f'''SELECT supplier_id FROM suppliers
+                                WHERE org_name=\'{form.cleaned_data['supplier']}\'''')
+            supplier_id = cursor.fetchone()
+            print(f'SUPPLIER_ID: {supplier_id}')
+
+            data += publisher_id[0], supplier_id[0]
+            print('DATA: ', data)
+
+        with connection.cursor() as cursor:
+            SQL_query = f'''UPDATE books
+                            SET title=\'{data[0]}\',
+                                price={data[1]},
+                                production_date=\'{data[2]}\',
+                                publisher_id={publisher_id[0]},
+                                supplier_id={supplier_id[0]}
+                            WHERE book_id={book_id};'''
+            print(SQL_query)
+            print('FORM CLEANED DATA: ', form.cleaned_data['publisher'])
+            cursor.execute(SQL_query)
+
+        return HttpResponseRedirect('/all_books_employee/')  # это чтобы после обновления страницы или отправки формы, данные
+                                                                # полей формы очищались
+    return render(request, 'book_store/update_book.html', context={'form': form})

@@ -10,5 +10,6 @@ urlpatterns = [
     path('employee_main_page/', views.employee_main_page),
     path('add_book/', views.add_book),
     path('all_books_employee/', views.all_books_employee),
-    path('delete_book/<int:book_id>/', views.delete_book, name='book')
+    path('delete_book/<int:book_id>/', views.delete_book, name='book'),
+    path('update_book/<int:book_id>/', views.update_book, name='book'),
 ]
